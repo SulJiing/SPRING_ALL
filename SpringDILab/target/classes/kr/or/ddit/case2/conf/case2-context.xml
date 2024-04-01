@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+	default-init-method="init123"
+	default-lazy-init="true"
+	>
+
+<!-- 	컨테이너의 bean 관리 특성 -->
+<!-- 	1. 구체적인 설정(scope)이 없는 한 bean을 대상으로 싱글턴으로 관리함. -->
+<!-- 		singleton - 주입횟수와 무관하게 동일한 bean이 주입됨. -->
+<!-- 		prototype(+lazy-init) - 주입될 때마다 새로운 객체가 생성 및 주입됨.(즉, 내부에서 lazy 가 true인 것 과 같음) -->
+<!-- 	2. 구체적인 설정(lazy-init)이 없는 한 등록된 모든 bean들을 컨테이너와 동시에 객체 생성 및 메모리 로딩 작업 -->
+<!-- 	3. bean 객체 생성 순서 제어시 depends-on을 사용하나, 실제 주입은 이뤄지지 않음 -->
+<!-- 	4. 컨테이너의 기본 특성이 콜백 구조를 활용함 -->
+<!-- 		컨테이너는 생명주기 관리자이므로, 해당 생명주기내의 주요 이벤트에서 콜백 구조를 활용하고 있음 -->
+<!-- 		init-method(bean 객체가 생성되고, 필요한 모든 주입이 완료된 후 호출됨 ***(중요)), destory-method -->
+
+<!-- scope="prototype" 싱글톤으로 사용하지 않기 위함 -->
+<!-- 	싱글톤의 대상은 bean -->
+<!-- 	lazy-init = 기본값이 false - 미리 만듦 -->
+	<bean id="bibitan" class="kr.or.ddit.case2.material.Bibitan"/>
+	<bean id="shotGun" class="kr.or.ddit.case2.material.ShotGun" scope="prototype"/>
+	
+<!-- 	c : 생성자	p : setter -->
+	<bean id="hunter" class="kr.or.ddit.case2.material.Hunter" scope="singleton" lazy-init="false"
+		p:gun-ref="bibitan"
+		destroy-method="destroy123"
+	/>
+</beans>

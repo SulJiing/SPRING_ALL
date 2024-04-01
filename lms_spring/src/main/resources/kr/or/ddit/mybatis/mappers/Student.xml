@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.dao.StudentDAO">
+	
+	<insert id="insertStudent" parameterType="StudentVO">
+		INSERT INTO student (
+		    std_no,
+		    std_name,
+		    std_id,
+		    std_telno,
+		    std_address,
+		    pro_no
+		) VALUES (
+		    #{stdNo,jdbcType=CHAR},
+		    #{stdName,jdbcType=VARCHAR},
+		    #{stdId,jdbcType=VARCHAR},
+		    #{stdTelno,jdbcType=VARCHAR},
+		    #{stdAddress,jdbcType=VARCHAR},
+		    #{proNo,jdbcType=CHAR}
+		)
+	</insert>
+	
+	<update id="updateStudent" parameterType="StudentVO">
+		UPDATE student
+		SET
+		   	std_name = #{stdName,jdbcType=VARCHAR},
+		    std_telno = #{stdTelno,jdbcType=VARCHAR},
+		    std_address = #{stdAddress,jdbcType=VARCHAR},
+		    pro_no = #{proNo,jdbcType=CHAR}
+		WHERE
+		        std_no = #{stdNo,jdbcType=CHAR}
+	</update>
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM STUDENT
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectStudentList" resultType="StudentVO" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		WITH STU AS(
+		SELECT std_no, std_name, std_id, std_telno, std_address, pro_no
+		FROM student
+		<include refid="searchFrag" />
+		ORDER BY STD_NAME, STD_NO
+		), RNUMSTU AS(
+		SELECT ROWNUM RNUM, S.*
+		FROM STU S
+		)
+		SELECT *
+		FROM RNUMSTU
+		<![CDATA[
+	      WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+	   ]]>
+	</select>
+	
+	<select id="selectStudent" resultMap="stdMap" parameterType="string">
+		SELECT ST.std_no, ST.std_name, ST.std_id, ST.std_telno, ST.std_address, 
+		        P.pro_no, P.pro_name,
+		        C.cls_score,
+		        SB.sub_name
+		FROM student ST LEFT OUTER JOIN professor P ON (ST.pro_no = P.pro_no)
+		                LEFT OUTER JOIN class C ON (ST.std_no = C.std_no)
+		                LEFT OUTER JOIN subject SB ON (C.sub_cd = SB.sub_cd)
+		WHERE ST.std_no = #{stdNo,jdbcType=CHAR}
+	</select>
+	
+	<select id="selectStudentSubList" resultMap="stdSubMap" parameterType="string">
+		SELECT ROWNUM RNUM, ST.std_no, ST.std_name, ST.std_id, ST.std_telno, ST.std_address, ST.pro_no,
+		        C.cls_score
+		FROM student ST LEFT OUTER JOIN class C ON (ST.std_no = C.std_no)
+		WHERE C.sub_cd = #{subCd,jdbcType=CHAR}
+	</select>
+		
+	<resultMap type="StudentVO" id="stdMap" autoMapping="true">
+		<id property="stdNo" column="STD_NO"/> <!-- 여기 아이디 없으면 바로 에러임 // 중복여부 판단 -->
+		<association property="professor" javaType="ProfessorVO">
+			<result property="proName" column="PRO_NAME"/>
+		</association>
+		<collection property="clazzList" javaType="list" ofType="ClazzVO">
+			<result property="clsScore" column="CLS_SCORE"/>
+			<association property="subject" javaType="SubjectVO">
+				<result property="subName" column="SUB_NAME"/>
+			</association>
+		</collection>
+	</resultMap>
+	
+	<resultMap type="StudentVO" id="stdSubMap" autoMapping="true">
+		<id property="rnum" column="RNUM"/> 
+		<association property="clazz" javaType="ClazzVO">
+			<result property="clsScore" column="CLS_SCORE"/>
+		</association>
+	</resultMap>
+		
+	<sql id="searchFrag">
+		<where>			
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'stdName'">  <!-- 셀렉트 박스로 지정해줬을떄 -->
+						INSTR(STD_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'stdAddress'">
+						INSTR(STD_ADDRESS, #{simpleCondition.searchWord}) > 0
+					</when>
+					<otherwise> <!-- 셀렉트박스 선택 안했을떄 두개에 대한걸 모두 조회해야함 >> OR -->
+						INSTR(STD_NAME, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(STD_ADDRESS, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</sql>
+	
+</mapper>

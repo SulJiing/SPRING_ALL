@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<p>
+	<input type="text" id="propName" placeholder="프로퍼티 이름"/>
+	<input type="text" id="propValue" placeholder="프로퍼티 값"/>
+	<button id="addProperty">프로퍼티 추가</button>
+</p>
+<script>
+	let obj = {
+		prop1:"value1",
+		"prop2":"value2",
+		["prop4"]:"value4",
+	};
+	
+	let array = ['a', 'b', 'c'];
+	
+	const printObject = (targetObj)=>{ // obj, array 사용가능
+		console.log("------------------------------------");
+		// targetObj에 n가 포함되어 있는지 확인
+		for(let n in targetObj) console.log(n,targetObj[n]);
+		console.log("------------------------------------");
+	};
+	
+	const printArray1 = (targetArray) =>{ // array만 사용가능
+		for(let i=0; i<targetArray.length; i++) {
+			console.log(i, targetArray[i]);
+		}
+	}
+	
+	const printArray2 = (targetArray) =>{ // array만 사용가능
+		// targetArray에 element가 있는지 확인
+		for(let element of targetArray) console.log(element);
+	}
+	
+	addProperty.addEventListener("click",()=>{
+		let name = propName.value;
+		let value = propValue.value;
+		if(!(name in obj)) { // 해당 객체가 이미 있는지 확인
+			obj[name] = value;
+			propName.value = "";
+			propValue.value = "";
+			printObject(obj);
+		}
+	});
+</script>
+</body>
+</html>

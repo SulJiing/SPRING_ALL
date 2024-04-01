@@ -1,0 +1,17 @@
+@charset "UTF-8";
+  th,td {
+     border : 1px solid black;
+     text-align : center;
+  }
+  table {
+     border-collapse: collapse;
+  }
+  .sunday {
+     color:red;
+  }
+  .saturday{
+     color:blue;
+  }
+  .before,.after{
+     color:silver
+  }

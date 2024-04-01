@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.lecture.dao.LectureDAO">
+
+	 <resultMap id="lectureResultMap" type="LectureVO">
+	    <result property="subCd" column="SUB_CD"/>
+	    <result property="stdName" column="STD_NAME"/>
+	</resultMap>
+	
+	<select id="selectLecture" parameterType="LectureVO" resultType="LectureVO">
+		    SELECT * 
+		    FROM LECTURE
+		    WHERE PRO_NO = #{proNo, jdbcType=CHAR}
+            AND SUB_CD = #{subCd, jdbcType=CHAR}
+	</select>
+
+	<select id="selectTotalRecord" resultType="int"
+		parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM LECTURE
+
+	</select>
+
+	<select id="selectLectureList" resultType="LectureVO"
+		parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT C.*
+		FROM(
+		SELECT
+		A.PRO_NO,A.SUB_CD,A.LEC_DAY,A.LEC_TIME,A.LEC_ROOM , B.SUB_NAME
+		FROM
+		LECTURE A LEFT OUTER JOIN SUBJECT B ON(A.SUB_CD = B.SUB_CD)
+		) C LEFT
+		OUTER JOIN PROFESSOR D ON(C.PRO_NO = D.PRO_NO)
+	</select>
+</mapper>

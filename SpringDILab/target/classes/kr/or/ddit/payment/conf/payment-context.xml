@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+<!-- 의존하지 않는 순서대로 객체를 생성해줌 (DAO -> SERVICE -> VIEW -> CONTROLLER) -->
+<!-- 	employeeDAO = new EmployeDAOImpl_Oracle(); -->
+	<bean id="employeeDAOImpl_Oracle" class="kr.or.ddit.payment.dao.EmployeeDAOImpl_Oracle"></bean>
+	<bean id="employeeDAOImpl_Marai" class="kr.or.ddit.payment.dao.EmployeeDAOImpl_Marai"></bean>
+	
+<!-- 	paymentService = new PaymentServiceImpl(); -->
+	<bean id="paymentService" class="kr.or.ddit.payment.service.PaymentServiceImpl">
+<!-- 		paymentService.setEmpDAO(employeeDAO); -->
+		<property name="empDAO" ref="employeeDAOImpl_Marai"/>
+<!-- 		paymentService.setSalDAO(new SalaryDAOImpl()); -->
+		<property name="salDAO">
+			<bean class="kr.or.ddit.payment.dao.SalaryDAOImpl"></bean>
+		</property>
+	</bean>
+	
+	<bean id="payMonthlyView" class="kr.or.ddit.payment.view.PayMonthlyView"></bean>
+	<bean id="receiveCommandController" class="kr.or.ddit.payment.controller.ReceiveCommandController">
+		<constructor-arg name="service" ref="paymentService"></constructor-arg>
+		<constructor-arg name="view" ref="payMonthlyView"></constructor-arg>
+	</bean>
+
+</beans>

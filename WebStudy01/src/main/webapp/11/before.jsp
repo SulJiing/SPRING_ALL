@@ -1,0 +1,25 @@
+<%@page import="java.time.LocalDateTime"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+	LocalDateTime processTime = LocalDateTime.now();
+	// case1 - state less
+	request.setAttribute("processTime", processTime);
+	// case2 - state full(session)
+	session.setAttribute("processTime", processTime);
+	// case3 - state full(cookie) : 문자열만 저장가능
+	Cookie customCookie = new Cookie("processTime",processTime.toString());
+	response.addCookie(customCookie);
+%>
+<a href="afterCase1.jsp">이후 발생하는 새로운 요청(request scope)</a>
+<a href="afterCase2.jsp">이후 발생하는 새로운 요청(session scope)</a>
+<a href="afterCase3.jsp">이후 발생하는 새로운 요청(Cookie)</a>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.dao.StudentOthersDAO">
+	
+	<sql id="searchFrag">
+		<trim prefix="WHERE" suffixOverrides="OR">
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+		 		<choose>
+					<when test="simpleCondition.searchType eq 'stdNo'">
+						INSTR(A.STD_NO,  #{simpleCondition.searchWord}) > 0 
+					</when>
+					<when test="simpleCondition.searchType eq 'stdName'">
+						INSTR(A.STD_NAME,  #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'proName'">
+						INSTR(B.PRO_NAME,  #{simpleCondition.searchWord}) > 0 
+					</when>
+					<otherwise>
+						INSTR(A.STD_NO,  #{simpleCondition.searchWord}) > 0 
+						OR
+						INSTR(A.STD_NAME, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(B.PRO_NAME, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</trim>
+	</sql>
+	
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+	 	FROM STUDENT A LEFT OUTER JOIN PROFESSOR B
+		ON(A.PRO_NO = B.PRO_NO)
+		<include refid="searchFrag"/>
+	</select>
+	
+	<resultMap type="hashMap" id="studentMap">
+		<id property="stdNo" column="STD_NO"/>
+		<result property="rnum" column="RNUM"/>
+		<result property="stdName" column="STD_NAME"/>
+		<result property="stdTelno" column="STD_TELNO"/>
+		<result property="stdAddress" column="STD_ADDRESS"/>
+		<result property="stdId" column="STD_ID"/>
+		<result property="proNo" column="PRO_NO"/>
+		<result property="proName" column="PRO_NAME"/>
+	</resultMap>
+	
+	<select id="selectStudentList" resultMap="studentMap" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT D.*
+		FROM(
+		    SELECT ROWNUM RNUM, C.*
+		    FROM(
+		        SELECT A.STD_NO, A.STD_NAME, A.STD_TELNO,A.PRO_NO, B.PRO_NAME 
+		        FROM STUDENT A LEFT OUTER JOIN PROFESSOR B
+		        ON(A.PRO_NO = B.PRO_NO)
+		        <include refid="searchFrag"/>
+		        ORDER BY A.STD_NO
+		    ) C
+		)D
+		<![CDATA[
+	      WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+	   ]]>
+	</select>
+	
+	<select id="selectStudent" resultMap="studentMap" parameterType="string">
+		SELECT A.STD_NO, A.STD_NAME, A.STD_TELNO, A.STD_ADDRESS, A.STD_ID, A.PRO_NO, B.PRO_NAME
+		FROM STUDENT A LEFT OUTER JOIN PROFESSOR B
+		ON(A.PRO_NO = B.PRO_NO)
+		WHERE A.STD_NO = #{stdNo}
+	</select>
+	
+	<resultMap type="hashMap" id="studentClazzMap">
+		<id property="subCd" column="SUB_CD"/>
+		<result property="subName" column="SUB_NAME"/>
+		<result property="stdNo" column="STD_NO"/>
+		<result property="stdName" column="STD_NAME"/>
+		<result property="clsScore" column="CLS_SCORE"/>
+	</resultMap>
+	
+	<select id="selectStudentClazz" resultMap="studentClazzMap" parameterType="string">
+		SELECT C.STD_NO, D.STD_NAME, C.SUB_CD, C.SUB_NAME ,C.CLS_SCORE
+		    FROM(
+		    SELECT A.std_no, B.SUB_CD, B.SUB_NAME ,A.cls_score
+		    FROM CLASS A LEFT OUTER JOIN SUBJECT B
+		    ON(A.SUB_CD = B.SUB_CD)
+		    WHERE STD_NO = #{stdNo}
+		) C LEFT OUTER JOIN STUDENT D 
+		ON(C.STD_NO = D.STD_NO)
+	</select>
+	
+</mapper>

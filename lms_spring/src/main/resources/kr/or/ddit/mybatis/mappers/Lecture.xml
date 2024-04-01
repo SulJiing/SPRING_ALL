@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.lecture.dao.LectureDAO">
+	
+	<select id="selectLectureListPro" resultMap="lecSubMap" parameterType="string">
+		WITH LEC AS(
+		SELECT pro_no, sub_cd, lec_time, lec_room, lec_day
+		FROM lecture
+		WHERE PRO_NO = #{proNo,jdbcType=CHAR}
+		)
+		SELECT ROWNUM RNUM, S.sub_name,L.*
+		FROM LEC L LEFT OUTER JOIN SUBJECT S ON (L.sub_cd = S.sub_cd)
+	</select>
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM LECTURE L LEFT OUTER JOIN PROFESSOR P ON (L.pro_no = P.pro_no)
+                LEFT OUTER JOIN SUBJECT S ON (l.sub_cd = S.sub_cd)
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectLectureList" resultMap="lecProSubMap">
+		WITH LECTPROSUB AS(
+		SELECT L.pro_no, L.sub_cd, L.lec_time, L.lec_room, L.lec_day
+		        ,P.pro_name, P.pro_major, P.pro_telno,
+		        S.sub_gubun, S.sub_name, s.sub_credit
+		FROM LECTURE L LEFT OUTER JOIN PROFESSOR P ON (L.pro_no = P.pro_no)
+		        LEFT OUTER JOIN SUBJECT S ON (L.sub_cd = S.sub_cd)
+		
+		 <include refid="searchFrag" />
+		
+		),
+		ORDERLPS AS(
+		SELECT LPS.*
+		FROM LECTPROSUB LPS
+		ORDER BY LPS.sub_name
+		), RNUMLPS AS(
+		SELECT ROWNUM RNUM, OLPS.*
+		FROM ORDERLPS OLPS
+		)
+		SELECT *
+		FROM RNUMLPS
+		<![CDATA[
+	      WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+	   ]]>
+	</select>
+	
+	<resultMap type="LectureVO" id="lecProSubMap" autoMapping="true">
+		<id property="rnum" column="RNUM"/> <!-- 여기 아이디 없으면 바로 에러임 // 중복여부 판단 -->
+		<!-- association : 1:1 관계 바인드 설정 -->
+		<association property="professor" javaType="ProfessorVO" autoMapping="true">
+			<id property="proNo" column="PRO_NO"/> <!-- id는 수동으로 하는것이 좋다. primary key고 VO에 equals되어있어서 -->
+		</association>
+		<association property="subject" javaType="SubjectVO" autoMapping="true">
+			<id property="subCd" column="SUB_CD"/> <!-- id는 수동으로 하는것이 좋다. primary key고 VO에 equals되어있어서 -->
+		</association>
+	</resultMap>
+	
+	<resultMap type="LectureVO" id="lecSubMap" autoMapping="true">
+		<id property="rnum" column="RNUM"/> <!-- 여기 아이디 없으면 바로 에러임 // 중복여부 판단 -->
+		<!-- association : 1:1 관계 바인드 설정 -->
+		<association property="subject" javaType="SubjectVO" autoMapping="true">
+			<id property="subCd" column="SUB_CD"/> <!-- id는 수동으로 하는것이 좋다. primary key고 VO에 equals되어있어서 -->
+		</association>
+	</resultMap>
+	
+	<sql id="searchFrag">
+		<where>			
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'proName'">  <!-- 셀렉트 박스로 지정해줬을떄 -->
+						INSTR(PRO_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'subName'">
+						INSTR(SUB_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<otherwise> <!-- 셀렉트박스 선택 안했을떄 두개에 대한걸 모두 조회해야함 >> OR -->
+						INSTR(PRO_NAME, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(SUB_NAME, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</sql>
+	
+</mapper>

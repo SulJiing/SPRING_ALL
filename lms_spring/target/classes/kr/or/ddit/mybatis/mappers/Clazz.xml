@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.clazz.dao.ClazzDAO">
+	
+	<insert id="insertClazz" parameterType="ClazzVO">
+		INSERT INTO class (
+		    std_no,
+		    sub_cd,
+		    cls_score
+		) VALUES (
+		    #{stdNo,jdbcType=CHAR},
+		    #{subCd,jdbcType=CHAR},
+		    0
+		)
+	</insert>
+	
+	<update id="updateClazz" parameterType="ClazzVO">
+		UPDATE class
+		SET
+		    cls_score = #{clsScore,jdbcType=NUMERIC}
+		WHERE
+		        std_no = #{stdNo,jdbcType=CHAR}
+		    AND sub_cd = #{subCd,jdbcType=CHAR}
+	</update>
+	
+	<select id="selectClazz" resultType="ClazzVO" parameterType="ClazzVO">
+		SELECT *
+		FROM CLASS
+		WHERE STD_NO = #{stdNo}
+		AND SUB_CD = #{subCd}
+	</select>
+	
+	
+</mapper>

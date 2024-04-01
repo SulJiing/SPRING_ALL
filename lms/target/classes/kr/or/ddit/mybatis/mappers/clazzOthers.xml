@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.clazz.dao.ClazzOthersDAO">
+	
+	<resultMap type="hashMap" id="clazzList">
+		<id property="stdNo" column="STD_NO"/>
+		<result property="stdName" column="STD_NAME"/>
+		<result property="subCd" column="SUB_CD"/>
+		<result property="subName" column="SUB_NAME"/>
+		<result property="clsScore" column="CLS_SCORE"/>
+	</resultMap>
+	
+	<select id="selectStudentClazz" parameterType="string" resultMap="clazzList">
+		SELECT C.SUB_CD, D.SUB_NAME, C.STD_NO, C.STD_NAME, C.CLS_SCORE
+		FROM(
+		    SELECT A.SUB_CD, A.STD_NO, B.STD_NAME, A.CLS_SCORE
+		    FROM CLASS A LEFT OUTER JOIN STUDENT B
+		    ON(A.STD_NO = B.STD_NO)
+		    WHERE SUB_CD = #{subCd}
+		) C LEFT OUTER JOIN SUBJECT D
+		ON(C.SUB_CD = D.SUB_CD)
+	</select>
+	
+	<update id="updateClazz" parameterType="ClazzVO">
+		UPDATE CLASS
+		SET
+		    CLS_SCORE = #{clsScore, jdbcType=NUMERIC}
+		WHERE
+		    std_no = #{stdNo}
+		    AND sub_cd = #{subCd}
+	</update>
+	
+</mapper>

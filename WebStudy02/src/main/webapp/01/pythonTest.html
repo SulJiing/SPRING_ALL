@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript">
+function myclick() {
+	var btnValue = this.value;
+    var chang = document.getElementById("it");
+    chang.value += btnValue;
+    console.log(btnValue);
+}
+// function myclick(btnValue) {
+//     var chang = document.getElementById("it");
+//     chang.value += btnValue;
+// }
+function callclick() {
+   var chang = document.getElementById("it").value;
+   alert(chang+"로 전화거는 중...");
+}
+</script>
+</head>
+<body>
+<table border=1px>
+   <tr>
+      <td colspan="3">
+         <input type="text" id="it" style="text-align: right">
+      </td>
+   </tr>
+   <tr>
+<!--       <td><input type="button" class="btn" value="1" onclick="myclick('1')"></td> -->
+       <td><input type="button" class="btn" value="1" onclick="myclick()"></td>
+      <td><input type="button" class="btn" value="2" onclick="myclick()"></td>
+      <td><input type="button" class="btn" value="3" onclick="myclick()"></td>
+   </tr>                                                             
+   <tr>                                                              
+      <td><input type="button" class="btn" value="4" onclick="myclick()"></td>
+      <td><input type="button" class="btn" value="5" onclick="myclick()"></td>
+      <td><input type="button" class="btn" value="6" onclick="myclick()"></td>
+   </tr>                                                             
+   <tr>                                                              
+      <td><input type="button" class="btn" value="7" onclick="myclick()"></td>
+      <td><input type="button" class="btn" value="8" onclick="myclick()"></td>
+      <td><input type="button" class="btn" value="9" onclick="myclick()"></td>
+   </tr>                                                             
+   <tr>                                                              
+      <td><input type="button" class="btn" value="0" onclick="myclick()"></td>
+      <td colspan="2">
+         <input type="button" id="btn_call" value="☎" onclick="callclick()">
+      </td>
+   </tr>
+</table>
+</body>
+</html>

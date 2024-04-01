@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.dao.ProfessorDAO">
+
+	<sql id="searchFrag">
+		<where>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'proName'">
+						INSTR(PRO_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'proMajor'">
+						INSTR(PRO_MAJOR, #{simpleCondition.searchWord}) > 0
+					</when>
+					<otherwise>
+						INSTR(PRO_NAME, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PRO_MAJOR, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</sql>
+
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM PROFESSOR
+		<include refid="searchFrag"/>
+	</select>
+	
+	<select id="selectProfessorList" resultType="ProfessorVO" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		WITH ORDERED AS (
+			SELECT 
+				PRO_NO, PRO_NAME, PRO_MAJOR, PRO_TELNO
+			FROM PROFESSOR
+			<include refid="searchFrag"/>
+			ORDER BY ROWID DESC
+		), RNUMMEMBER AS (
+			SELECT ORDERED.*, ROWNUM RNUM
+			FROM ORDERED
+		)
+		SELECT *
+		FROM RNUMMEMBER
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectProfessor" resultType="ProfessorVO" parameterType="String">
+		SELECT
+		    P.PRO_NO,
+		    P.PRO_NAME,
+		    P.PRO_MAJOR,
+		    P.PRO_TELNO,
+		    L.SUB_CD,
+		    L.LEC_TIME,
+		    L.LEC_ROOM,
+		    L.LEC_DAY
+		FROM
+		    PROFESSOR P
+		LEFT JOIN
+		    LECTURE L ON P.PRO_NO = L.PRO_NO
+		WHERE
+			<![CDATA[
+		    P.PRO_NO = #{proNo, jdbcType=CHAR} AND ROWNUM <= 1
+		    ]]>
+	</select>
+	
+	<insert id="insertProfessor" parameterType="ProfessorVO">
+		INSERT INTO PROFESSOR (
+			PRO_NO, PRO_NAME, PRO_MAJOR, PRO_TELNO
+		) VALUES (
+			#{proNo, jdbcType=CHAR}
+			, #{proName, jdbcType=VARCHAR}
+			, #{proMajor, jdbcType=VARCHAR}
+			, #{proTelno, jdbcType=VARCHAR}
+		)
+	</insert>
+	<update id="updateProfessor" parameterType="ProfessorVO">
+		UPDATE PROFESSOR
+		SET
+		PRO_NAME=#{proName, jdbcType=VARCHAR},
+		PRO_MAJOR=#{proMajor, jdbcType=VARCHAR},
+		PRO_TELNO=#{proTelno, jdbcType=VARCHAR}
+		WHERE
+		PRO_NO=#{proNo, jdbcType=CHAR}
+	</update>
+</mapper>

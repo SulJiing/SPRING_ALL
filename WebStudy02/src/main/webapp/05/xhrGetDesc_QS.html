@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="../resources/js/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+<button data-role="xhr">XHR</button>
+<button data-role="ajax">AJAX</button>
+<button data-role="fetch">FETCH</button>
+<button onclick="innerbody.innerHTML='';">CLEAR</button>
+
+<form id="testForm" action="formDataProcess.do" method="get">
+	<input type="text" name="param1" placeholder="param1"/>
+	<input type="text" name="param2" placeholder="param2"/>
+	<button type="submit">동기전송</button>
+</form>
+	
+<span id="loadingarea" style="display: none;">
+    <img src="../resources/images/loading3.gif">
+</span>
+<div id="innerbody">
+
+</div>
+<script>
+
+    let fnOwner = {
+        fn_xhr : function(){
+			let xhr = new XMLHttpRequest(); // UNSENT
+			xhr.onreadystatechange = (event)=>{
+// 				let xhr = event.target; // 위랑 같기때문에 생략이 가능한 것
+				if(xhr.readyState==XMLHttpRequest.DONE){// 3과 같다면..
+					if(xhr.status == 200)
+					innerbody.innerHTML = xhr.responseText;
+				}
+			};
+			let formData = new FormData(testForm);
+			let body = new URLSearchParams(formData);
+			let url = testForm.action + "?" + body.toString();
+			xhr.open(testForm.method, url); // OPENED
+			xhr.setRequestHeader("Accept","text/html");
+			xhr.send(); // Header - receive -> loading -> done
+        },
+        fn_ajax : function(){
+        	let body = $(testForm).serialize();
+        	$.ajax({
+        		url:testForm.action,
+        		method:testForm.method,
+        		dataType:"html",
+        		data:body,
+        		success:function(html){
+        			innerbody.innerHTML = html;
+        		}
+        	});
+        },
+        fn_fetch : function() { // fecth는 Promise와 연결되어 있는데 then은 resolve, catch는 reject와 연결됨
+			let formData = new FormData(testForm);
+			let body = new URLSearchParams(formData);
+			let url = testForm.action + "?" + body.toString();
+        	fetch(url).then((resp)=>{ // then이 실행되는 시점은 처리가 완료된 이후임(끝난 상황)
+				if(resp.ok) {
+					return resp.text();	// Proimse를 반환한 것
+				}        		
+        	}).then(html=>innerbody.innerHTML=html);
+        }
+    }
+
+    document.querySelectorAll("[data-role]").forEach((el,idx)=>{
+        el.addEventListener("click",(event)=>{
+            // console.log(event.target.dataset.role);
+            // console.log(event.target.dataset['role']);
+            let role = event.target.dataset['role'];
+            fnOwner[`fn_${role}`]();
+        });
+    });
+
+</script>
+</body>
+</html>

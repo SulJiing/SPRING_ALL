@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.professor.dao.ProfessorDAO">
+	
+	<insert id="insertProfessor" parameterType="ProfessorVO">
+		INSERT INTO professor (
+		    pro_no,
+		    pro_name,
+		    pro_major,
+		    pro_telno
+		) VALUES (
+		    #{proNo,jdbcType=CHAR},
+		    #{proName,jdbcType=VARCHAR},
+		    #{proMajor,jdbcType=VARCHAR},
+		    #{proTelno,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="updateProfessor" parameterType="ProfessorVO">
+		UPDATE professor
+		SET
+		    pro_name = #{proName,jdbcType=VARCHAR},
+		    pro_major = #{proMajor,jdbcType=VARCHAR},
+		    pro_telno = #{proTelno,jdbcType=VARCHAR}
+		WHERE
+		    pro_no = #{proNo,jdbcType=CHAR}
+	</update>
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM PROFESSOR
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="selectProfessorList" resultType="ProfessorVO" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		WITH PRO AS(
+		SELECT pro_no, pro_name, pro_major, pro_telno
+		FROM professor
+		<include refid="searchFrag" />	
+		ORDER BY pro_name, pro_no
+		), RNUMPRO AS(
+		SELECT ROWNUM RNUM, P.*
+		FROM PRO P
+		)
+		SELECT * 
+		FROM RNUMPRO
+		<![CDATA[
+	      WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+	   ]]>
+	</select>
+	
+	<select id="selectProfessor" resultMap="proLecSubMap" parameterType="string">
+		SELECT  P.pro_no, P.pro_name, P.pro_major, P.pro_telno, 
+		        L.lec_time, L.lec_room, L.lec_day, 
+		        S.sub_gubun, S.sub_name, S.sub_credit
+		FROM professor P LEFT OUTER JOIN LECTURE L ON (P.pro_no = L.pro_no)
+		    LEFT OUTER JOIN SUBJECT S ON (L.sub_cd = S.sub_cd)
+		WHERE P.pro_no = #{proNo,jdbcType=CHAR}
+	</select>
+	
+	<resultMap type="ProfessorVO" id="proLecSubMap" autoMapping="true">
+		<id property="proNo" column="PRO_NO"/> <!-- 여기 아이디 없으면 바로 에러임 // 중복여부 판단 -->
+		<collection property="lectureList" javaType="list" ofType="LectureVO">
+			<result property="lecTime" column="LEC_TIME"/>
+			<result property="lecRoom" column="LEC_ROOM"/>
+			<result property="lecDay" column="LEC_DAY"/>
+			<association property="subject" javaType="SubjectVO">
+				<result property="subGubun" column="SUB_GUBUN"/>
+				<result property="subName" column="SUB_NAME"/>
+				<result property="subCredit" column="SUB_CREDIT"/>
+			</association>
+		</collection>
+	</resultMap>
+	
+	<sql id="searchFrag">
+		<where>			
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'proName'">  <!-- 셀렉트 박스로 지정해줬을떄 -->
+						INSTR(PRO_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'proMajor'">
+						INSTR(PRO_MAJOR, #{simpleCondition.searchWord}) > 0
+					</when>
+					<otherwise> <!-- 셀렉트박스 선택 안했을떄 두개에 대한걸 모두 조회해야함 >> OR -->
+						INSTR(PRO_NAME, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PRO_MAJOR, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</sql>
+	
+	
+</mapper>

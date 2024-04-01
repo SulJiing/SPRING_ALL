@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="../resources/js/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+<button data-role="xhr">XHR</button>
+<button data-role="ajax">AJAX</button>
+<button data-role="fetch">FETCH</button>
+<button onclick="innerbody.innerHTML='';">CLEAR</button>
+<span id="loadingarea" style="display: none;">
+    <img src="../resources/images/loading3.gif">
+</span>
+<div id="innerbody"></div>
+<script>
+	// Ajax 정의
+    let settings = {
+        url:"../02/standard.jsp",     // line
+        method:"GET",  // line
+        dataType:"html",// header / request Accept header
+        // data: "",   // body, GET요청이기 때문에 없어도 되는 것
+        beforeSend:function(){ // callback 패턴 - 단점이 있는데 세부적인 단계를 나눌수록 너무 많아짐 그래서 프라미스패턴을 사용
+            loadingarea.style.display = "block"; // 로딩 이미지 열기
+        },
+        success:function(resp){
+            innerbody.innerHTML = resp; // 응답 내용 동적 추가
+        },
+        error:function(jqXHR, textStatus, err){
+            innerbody.innerHTML = jqXHR.responseText;
+        },
+        complete:function(){
+            loadingarea.style.display = "none"; // 로딩 이미지 숨김
+        }
+    };
+
+    let fnOwner = {
+        fn_xhr : function(){
+            console.log("XMLHttpRequest case");
+            // 1. XMLHttpRequest case
+            // request line : URL, method
+            // request header : name/value
+            // request body(only post) : parameter(form-data)
+            // 1) XMLHttpRequest 객체 생성
+            let xhr = new XMLHttpRequest();
+            // UNSENT -> OPENED -> HEADER-RECEIVE -> LOADING -> DONE
+            xhr.onreadystatechange = function(event){
+                if(this.readyState < XMLHttpRequest.DONE) {
+                    settings.beforeSend();
+                } else {
+                    if(this.status == 200){
+                    	// 성공시
+                        settings.success(this.responseText);
+                    }else{
+                    	// 실패시 상태코드를 함수 내의 status로 뽑아줌
+                        settings.error(this, this.status, `상태코드 ${this.status}에러`);
+                    }
+                    settings.complete();
+                }
+            };
+            // 2) request line 결정 : open
+            xhr.open(settings.method,settings.url); // 요청 설정
+            // 3) request header... : setRequestHeader
+            xhr.setRequestHeader("accept","text/html"); // 요청의 헤드 설정
+            // 4) request body : send
+            xhr.send(); // 요청 전송
+        },
+        fn_ajax : function(){
+            console.log("ajax case");
+            $.ajax(settings);
+        },
+        fn_fetch : function() {
+            console.log("fetch case");
+            let fetchPromise = fetch(settings.url,{
+									method:settings.method,
+									headers:{
+										"accept":"text/html"
+									}
+									//body:"" // 여기서는 받아올 데이터가 없기 때문에 주석처리함
+					            });
+            // 여기까지가 beforesend와 같음
+            settings.beforeSend();
+            fetchPromise.then(resp=>{
+            	console.log(resp);
+            	if(resp.ok) { // 응답이 ok이면 resp.text() 반환
+            		return resp.text();
+//             		resp.json(); // 리턴타입은 둘다 Promise타입
+            	} else {
+            		throw new Error(`상태코드 ${resp.status}에러`,{cause:resp});	
+            	}
+            }).then(text=>{
+            	settings.success(text);
+            }).catch(err=>{
+            	console.log(err.cause);
+            	let resp = err.cause;
+            	resp.text().then(ep=>{
+            		settings.error({responseText:ep});
+            	});
+            }).finally(()=>{
+            	settings.complete();
+            });
+        }
+    }
+
+    // 2. $.ajax case
+    // 3. fetch case
+    document.querySelectorAll("[data-role]").forEach((el,idx)=>{
+        el.addEventListener("click",(event)=>{
+            // console.log(event.target.dataset.role);
+            // console.log(event.target.dataset['role']);
+            let role = event.target.dataset['role'];
+            fnOwner[`fn_${role}`]();
+        });
+    });
+
+    // Promise 객체 정의
+    let samplePromise = new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            let tmpNum = Math.random();
+            if(tmpNum>0.5) {
+                resolve(`생성된 난수 : ${tmpNum}`); // 성공
+            } else {
+                reject(new Error(`생성된 난수 : ${tmpNum}`)); // 실패
+            }
+        },3000);
+    });
+    
+    // Promise결과 처리
+    samplePromise.then(msg=>console.log(msg))
+                .catch(err=>console.error(err));
+    console.log("이 메세지가 언제 출력될까? 난수가 만들어지기 전에 출력되네..그 이유는 Promise는 미래시점을 준비하는 코드이기 때문에(예약)");
+</script>
+</body>
+</html>

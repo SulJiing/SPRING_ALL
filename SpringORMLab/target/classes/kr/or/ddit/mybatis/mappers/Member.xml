@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.member.dao.MemberDAO">
+
+	<sql id="searchFrag">
+		<where>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'name'">
+						INSTR(MEM_NAME, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'address'">
+						INSTR(MEM_ADD1, #{simpleCondition.searchWord}) > 0
+					</when>
+					<otherwise>
+						INSTR(MEM_NAME, #{simpleCondition.searchWord}) > 0
+						OR
+						INSTR(MEM_ADD1, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+				</choose>
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectTotalRecord" resultType="int" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		SELECT COUNT(*)
+		FROM MEMBER
+		<include refid="searchFrag"/>
+	</select>
+	<select id="selectMemberList" resultType="MemberVO" parameterType="kr.or.ddit.common.paging.PaginationInfo">
+		WITH ORDERED AS (
+			SELECT 
+				MEM_ID, MEM_NAME, MEM_MAIL, MEM_HP, MEM_ADD1, MEM_MILEAGE 
+			FROM MEMBER
+			<include refid="searchFrag"/>
+			ORDER BY ROWID DESC
+		), RNUMMEMBER AS (
+			SELECT ORDERED.*, ROWNUM RNUM
+			FROM ORDERED
+		)
+		SELECT *
+		FROM RNUMMEMBER
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	<select id="selectMemberForAuth" resultType="MemberVO" parameterType="String">
+		SELECT MEM_ID, MEM_PASS, MEM_NAME, MEM_MAIL, MEM_HP, MEM_ROLE
+		FROM MEMBER
+		WHERE MEM_ID = #{noname} AND MEM_DELETE IS NULL
+	</select>
+	
+	<resultMap type="MemberVO" id="memberMap" autoMapping="true">
+		<id property="memId" column="MEM_ID"/>
+		<collection property="cartList" javaType="list" ofType="CartVO" autoMapping="true">
+			<association property="prod" javaType="ProdVO" autoMapping="true"/>
+		</collection>
+	</resultMap>
+	<select id="selectMember" resultMap="memberMap" parameterType="String">
+		WITH CARTPROD AS (
+		SELECT CART_MEMBER, CART_NO, CART_PROD, CART_QTY
+			, PROD_ID, PROD_NAME, PROD_PRICE, PROD_MILEAGE
+		FROM CART INNER JOIN PROD ON (CART_PROD = PROD_ID) 
+		)
+		SELECT                                   
+		    mem_id, mem_pass, mem_name,              
+		    mem_regno1, mem_regno2, mem_bir,         
+		    mem_zip, mem_add1, mem_add2, mem_hometel,
+		    mem_comtel, mem_hp, mem_mail,            
+		    mem_job, mem_like, mem_memorial,         
+		    mem_memorialday, mem_mileage, mem_delete, mem_role
+		    , CARTPROD.*
+	    FROM MEMBER LEFT OUTER JOIN CARTPROD ON (MEM_ID = CART_MEMBER)                      
+	    	where mem_id = #{id}                    	
+	</select>
+	<insert id="insertMember" parameterType="MemberVO">
+		INSERT INTO member (
+		    MEM_id , MEM_pass , MEM_name , MEM_regno1 , MEM_regno2 , MEM_bir , MEM_zip        
+		    , MEM_add1 , MEM_add2 , MEM_hometel , MEM_comtel , MEM_hp , MEM_mail , MEM_job        
+		    , MEM_like , MEM_memorial , MEM_memorialday, mem_mileage     
+		) VALUES (          
+		    #{memId, jdbcType=VARCHAR}
+			, #{memPass, jdbcType=VARCHAR}
+			, #{memName, jdbcType=VARCHAR}
+			, #{memRegno1, jdbcType=CHAR}
+			, #{memRegno2, jdbcType=CHAR}
+			, #{memBir, jdbcType=DATE}
+			, #{memZip, jdbcType=CHAR}
+			, #{memAdd1, jdbcType=VARCHAR}
+			, #{memAdd2, jdbcType=VARCHAR}
+			, #{memHometel, jdbcType=VARCHAR}
+			, #{memComtel, jdbcType=VARCHAR}
+			, #{memHp, jdbcType=VARCHAR}
+			, #{memMail, jdbcType=VARCHAR}
+			, #{memJob, jdbcType=VARCHAR}
+			, #{memLike, jdbcType=VARCHAR}
+			, #{memMemorial, jdbcType=VARCHAR}
+			, #{memMemorialday, jdbcType=DATE}
+			, 1000            
+		)                   
+	</insert>
+	<delete id="deleteMember">
+		UPDATE MEMBER
+		SET
+		MEM_DELETE = 'Y'
+		WHERE MEM_ID = #{memId}
+	</delete>
+	<update id="updateMember" parameterType="MemberVO">
+<!-- 	아이디, 비밀번호, 생일, 이름, 주민번호, 탈퇴여부, 마일리지를 제외한 나머지 수정 -->
+		UPDATE member
+		SET
+		MEM_zip = #{memZip},
+		MEM_add1 = #{memAdd1},
+		MEM_add2 = #{memAdd2},
+		MEM_hometel = #{memHometel},
+		MEM_comtel = #{memComtel},
+		MEM_hp = #{memHp},
+		MEM_mail = #{memMail},
+		MEM_job = #{memJob},
+		MEM_like = #{memLike},
+		MEM_memorial = #{memMemorial},
+		MEM_memorialday = #{memMemorialday, jdbcType=DATE}
+		WHERE
+		MEM_id = #{memId}
+		
+	</update>
+</mapper>

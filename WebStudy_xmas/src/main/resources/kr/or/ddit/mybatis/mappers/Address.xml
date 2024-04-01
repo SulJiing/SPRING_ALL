@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.address.dao.AddressDAO">
+	<select id="selectAllAddress" resultType="AddressVO" parameterType="String">
+		SELECT * FROM TB_ADDRESS
+		WHERE ADRS_OWNER = #{ADRS_OWNER}
+	</select>
+	<select id="selectAddress" resultType="AddressVO" parameterType="String">
+		SELECT * FROM TB_ADDRESS
+		WHERE ADRS_NAME = #{ADRS_NAME}
+	</select>
+	<insert id="insertAddress" parameterType="AddressVO">
+		INSERT INTO TB_ADDRESS (
+			ADRS_NAME, ADRS_HP, ADRS_ZIP, ADRS_ADD1, ADRS_ADD2
+		) VALUES (
+			#{ADRS_NAME, jdbcType=VARCHAR}
+		,	#{ADRS_HP, jdbcType=VARCHAR}
+		,	#{ADRS_ZIP, jdbcType=VARCHAR}
+		,	#{ADRS_ADD1, jdbcType=VARCHAR}
+		,	#{ADRS_ADD2, jdbcType=VARCHAR}
+		)
+	</insert>
+</mapper>

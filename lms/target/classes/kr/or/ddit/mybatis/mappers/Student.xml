@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.student.dao.StudentDAO">
+	
+	<insert id="insertStudent" parameterType="StudentVO">
+		INSERT INTO student (
+	        std_no,
+	        std_name,
+	        std_id,
+	        std_telno,
+	        std_address,
+	        pro_no
+	    ) VALUES (
+	        #{stdNo},
+	        #{stdName},
+	        #{stdId},
+	        #{stdTelno},
+	        #{stdAddress},
+	        #{proNo}
+	    )	
+	</insert>
+	
+	<update id="updateStudent" parameterType="StudentVO">
+		UPDATE student
+		SET
+		    std_name = #{stdName,jdbcType=VARCHAR},
+		    std_id = #{stdId,jdbcType=VARCHAR},
+		    std_telno = #{stdTelno,jdbcType=VARCHAR},
+		    std_address = #{stdAddress,jdbcType=VARCHAR},
+		    pro_no = #{proNo,jdbcType=VARCHAR}
+		WHERE
+	        std_no = #{stdNo,jdbcType=VARCHAR}
+
+	</update>
+	
+	
+</mapper>
